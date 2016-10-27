@@ -1,5 +1,6 @@
 CC	= /usr/bin/gcc
 OBJ	= lib/knapsack.o lib/bind_solver.o
+OBJDEBUG = lib/knapsack.o lib/test_knapsack.o
 SHARED = bin/libknapsack.so
 DEPENDFILE = .depend
 
@@ -12,6 +13,10 @@ OBJFLAGS = -fPIC -I /usr/include/python2.7/
 PYTHONLIB = /usr/lib/python2.7
 
 .PHONY: clean
+
+debug: $(OBJDEBUG)
+	clang++ -stdlib=libc++ lib/knapsack.o lib/test_knapsack.o -o bin/knapsack_test
+
 
 test: $(OBJ)
 	$(CC) -o $(SHARED) $(OBJ) $(LIBFLAGS)

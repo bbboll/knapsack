@@ -1,1 +1,1 @@
-libknapsack.o: src/libknapsack.cpp src/libknapsack.hpp
+knapsack.o: src/knapsack.cpp src/knapsack.hpp
