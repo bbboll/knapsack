@@ -12,6 +12,8 @@ class Knapsack:
         self.capacity = cap
         self.items = []
 
+    def setCapacity(self, cap):
+        self.capacity = cap
     
     def addItem(self, weight, value):
         """
