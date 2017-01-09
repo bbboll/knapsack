@@ -1,9 +1,12 @@
 import knapsack
 
+"""
+This script is used to debug the knapsack solver in python/knapsack.py
+"""
 def main():
 
 	# setup libknapsack object
-    capacity = 4
+    capacity = 5
     ks = knapsack.Knapsack(capacity)
 
     # add items to knapsack

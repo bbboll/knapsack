@@ -1,46 +1,82 @@
-"""
-Knapsack objects provide an intuitive means of binding
-the problem data 
-This example code was taken from http://codereview.stackexchange.com/questions/20569/dynamic-programming-solution-to-knapsack-problem
-but is does not seem to work 100%
-"""
 class Knapsack:
     """
-    Initialize new knapsack object
-    with capacity and empty items list
+    Knapsack objects provide an intuitive means of binding
+    the problem data 
     """
+    
     def __init__(self, cap):
+        """
+        Initialize new knapsack object
+        with capacity and empty items list
+        """
         self.capacity = cap
         self.items = []
 
-    """
-    add an item to this knapsack list of items
-    """
+    
     def addItem(self, weight, value):
+        """
+        add an item to this knapsack list of items
+        """
         self.items.append([weight, value])
 
-    # Return the value of the most valuable subsequence of the first i
-    # elements in items whose weights sum to no more than j.
-    def bestvalue(self, i, j):
-        if i == 0: return 0
-        weight, value = self.items[i - 1]
-        if weight > j:
-            return self.bestvalue(i - 1, j)
-        else:
-            return max(self.bestvalue(i - 1, j),
-                       self.bestvalue(i - 1, j - weight) + value)
+    
+    def findBest(self, i, j):
+        """
+        Solve the subproblem of finding i items out of the first j items in the pool
+        return the optimal (combined) value
+        """
 
-    """
-    Solve the knapsack problem by finding the item subset with
-    maximum cummulative value whose combined weigth is less than
-    the knapsack capacity.
-    """
+        # check for first cache row
+        if i == 0: return 0
+
+        # check for cached result
+        if self.cache[i][j] >= 0: return self.cache[i][j]
+
+        # grab item for current row
+        weight, val = self.items[i-1]
+
+        # check if the current item exceeds weight limit
+        # and adjust cache accordingly
+        if weight > j:
+            # pass down this call
+            new = self.findBest(i-1, j)
+
+            # add result to cache
+            self.cache[i][j] = new
+            return new
+        else:
+            # candidates for best value
+            bestOld = self.findBest(i-1, j)
+            bestNew = self.findBest(i-1, j-weight) + val
+            new = max(bestOld, bestNew)
+
+            # add result to cache
+            self.cache[i][j] = new
+            return new
+
+    
     def solve(self):
-        j = self.capacity
-        result = []
+        """
+        Solve the knapsack problem by finding the item subset with
+        maximum cummulative value whose combined weigth is less than
+        the knapsack capacity.
+        """
+
+        # setup cache
+        self.cache = [[-1]*(self.capacity+1) for _ in xrange(len(self.items)+1)]
+        self.cache[0] = [0 for _ in xrange(self.capacity+1)]
+
+        # fill cache in a non-recursive way
+        for i in xrange(len(self.items)+1):
+            self.findBest(i, self.capacity)
+
+        # find optimal subset from cached subproblem solutions
+        optimalSubset = []
+        col = self.capacity
         for i in xrange(len(self.items), 0, -1):
-            if self.bestvalue(i, j) != self.bestvalue(i - 1, j):
-                result.append(self.items[i - 1])
-                j -= self.items[i - 1][1]
-        # result.reverse()
-        return self.bestvalue(len(self.items), self.capacity), result
+            if self.cache[i][col] != self.cache[i-1][col]:
+                col -= self.items[i-1][1]
+                optimalSubset.append(self.items[i-1])
+
+        return self.findBest(len(self.items), self.capacity), optimalSubset
+
