@@ -19,7 +19,9 @@ int main(int argc, char const *argv[])
    	ItemList result = ks.solve();
     for (int i = 0; i < result.size(); ++i)
     {
-		cout << result.at(i) << endl;    	
+		cout << 
+            "(" << result.at(i).weight << "," << result.at(i).value << ")" 
+        << endl;
     }
 
 	return 0;

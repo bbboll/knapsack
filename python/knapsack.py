@@ -75,7 +75,7 @@ class Knapsack:
         col = self.capacity
         for i in xrange(len(self.items), 0, -1):
             if self.cache[i][col] != self.cache[i-1][col]:
-                col -= self.items[i-1][1]
+                col -= self.items[i-1][0]
                 optimalSubset.append(self.items[i-1])
 
         return self.findBest(len(self.items), self.capacity), optimalSubset

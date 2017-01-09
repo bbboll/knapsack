@@ -3,26 +3,27 @@
 
 #include <vector>
 
-// this data type is used when passing the solution
-// of a knapsack problem to python
-typedef std::vector<int> ItemList;
-
 // struct to hold item data
 struct Item {
-	int id;
 	int weight;
 	int value;
 };
+
+// this data type is used when passing the solution
+// of a knapsack problem to python
+typedef std::vector<Item> ItemList;
 
 // class to hold knapsack problem data and expose solver
 class Knapsack
 {
 private:
 	std::vector<Item> items;
+	int **cache;
 	int capacity;
+	int findBest(int i, int j);
 
 public:
-	void addItem(int id, int weight, int value);
+	void addItem(int weight, int value);
 	void setCapacity(int cap);
 	ItemList solve();
 };
