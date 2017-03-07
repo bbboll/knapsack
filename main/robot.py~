@@ -4,14 +4,7 @@ import time
 import sys
 import ev3dev.ev3 as ev3
 
-COLOR_NONE 	= 0
-COLOR_BLACK	= 1
-COLOR_BLUE 	= 2
-COLOR_GREEN 	= 3
-COLOR_YELLOW 	= 4
-COLOR_RED 	= 5
-COLOR_WHITE	= 6
-COLOR_BROWN	= 7
+COLOR_RED = 5
 
 class DeviceNotFoundException(Exception):
 	pass
@@ -33,10 +26,9 @@ class Robot:
 
 	# parameters
 	DROP_DELAY = 1500
-	BRICK_WAIT_LIMIT = 3000
 	TOP_MOTOR_TIME = 750
 	BOT_MOTOR_TIME = 400
-	BOT_MOTOR_POWER = 300
+	BOT_MOTOR_POWER = 200
 	COLOR_SENSOR_HERTZ = 20
 	TOUCH_SENSOR_HERTZ = 5
 
@@ -54,16 +46,14 @@ class Robot:
 			sys.exit(0)
 		
 		self.initBottomMotor()
-		self.dprint("Robot ready.")
+		self.dprint("Ready.")
+		# ev3.Sound.speak("Trucks are bad, mkay you fucking cunt?")
 
 	def checkDevice(self, device, title):
 		try:
 			self.dprint("Found device '", title, "': ", device.address)
 		except Exception as e:
 			raise DeviceNotFoundException("Device '{}' not found., ".format(title))
-
-	def say(self, string):
-		ev3.Sound.speak(string)
 
 	def initBottomMotor(self):
 		i = 0
@@ -83,23 +73,20 @@ class Robot:
 	# sleep in milliseconds
 	def sleep(self, milliseconds):
 		time.sleep(milliseconds / 1000)
+	
+	#
+	def waitForTouch(self):
+		while(self.touchSensor.value() != 1):
+			self.dprint("Waiting for button press... Status: Not Pressed")
+			self.sleep(1000 / self.TOUCH_SENSOR_HERTZ) # let the robot relax
+		self.dprint("Waiting for button press... Status: Pressed")
 
-	# wait for a brick (up to BRICK_WAIT_LIMIT)
+	# wait for a brick
 	def waitForBrick(self):
-		self.dprint("Robot waiting for brick")
-		elapsed = 0
-		while(self.colorSensor.color() == COLOR_NONE or self.colorSensor.color() == COLOR_BLACK):
-			interval = 1000 / self.COLOR_SENSOR_HERTZ
-			self.sleep(interval)
-			elapsed += interval
-			if elapsed > self.BRICK_WAIT_LIMIT:
-				return False
-		return True
-
-	# scan brick at top sensor
-	def getBrickColor(self):
-		return self.colorSensor.color()
-		
+		self.dprint("Waiting for brick")
+		while(True):
+			self.sleep(1000 / self.COLOR_SENSOR_HERTZ)
+			print(self.colorSensor.color())
 
 	# 750 milliseconds at 200 sp
 	def dropBrick(self):
@@ -110,8 +97,13 @@ class Robot:
 
 	# 
 	def throwBrick(self, trash=False):
-		self.runMotorTillColor(self.bottomMotor, self.bottomSensor, (COLOR_GREEN if trash else COLOR_YELLOW), not trash, self.BOT_MOTOR_POWER)
-		self.runMotorTillColor(self.bottomMotor, self.bottomSensor, COLOR_RED, trash, self.BOT_MOTOR_POWER)
+		self.runMotor(self.bottomMotor, self.BOT_MOTOR_TIME, inversed=trash, power=self.BOT_MOTOR_POWER)
+
+		# center motor
+		while(self.bottomSensor.color() != COLOR_RED):		
+			self.runMotorTillRed(self.bottomMotor, self.bottomSensor, inversed=(not trash),power=self.BOT_MOTOR_POWER)
+		self.runMotor(self.bottomMotor, 75, inversed=(not trash),power=self.BOT_MOTOR_POWER)
+
 
 	def runMotor(self, motor, t, inversed=False, power=200):
 		motor.reset()
@@ -121,19 +113,12 @@ class Robot:
 			if not 'running' in motor.state:
 				return
 
-	def runMotorTillColor(self, motor, sensor, color, inversed=False, power=200):
+	def runMotorTillRed(self, motor, sensor, inversed=False, power=200):
 		motor.reset()
 		motor.run_forever(speed_sp=power * (-1 if inversed else 1))
-		end = 0
-		while sensor.color() != color and end < 20:
-			self.sleep(20)
-			end = end + 1
-		motor.stop()
 
-	#
-	def waitForTouch(self):
-		while(self.touchSensor.value() != 1):
-			self.dprint("Waiting for button press... Status: Not Pressed")
-			self.sleep(1000 / self.TOUCH_SENSOR_HERTZ) # let the robot relax
-		self.dprint("Waiting for button press... Status: Pressed")
+		while sensor.color() != COLOR_RED:
+			motor.stop()
+			return		
+
 

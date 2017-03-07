@@ -1,35 +1,31 @@
 #!/usr/bin/python3
 import robot
+import knapsack
 import time
+import settings
 
 def main():
-	r = robot.Robot(debug=True)
-
+	config = settings.Settings()
+	r = robot.Robot(debug=config.debug())
+	ks = knapsack.Knapsack(cap=config.knapsack_cap)
 	
-	r.dropBrick()
-	r.dropBrick()
-	r.dropBrick()
-	r.dropBrick()
-	r.dropBrick()
-
-	r.throwBrick(trash=True)
-	time.sleep(1)
-	r.throwBrick(trash=False)
-	time.sleep(1)
-	r.throwBrick(trash=False)
-	time.sleep(1)
-	r.throwBrick(trash=True)
-	time.sleep(1)
-	r.throwBrick(trash=True)
+	# scann all bricks
+	while r.waitForBrick():
+		color = r.getBrickColor()
+		weight, value = config.itemDataForColor(color)
+		ks.addItem(weight, value)
+		r.dropBrick()
 	
-	
+	# solve knapsack problem
+	max_val, optimal_subset = ks.solve()
 
-	#r.throwBrick(trash=True)
-	#r.testBottomMotor()
-	#r.testTopMotor()
+	for block_index in range(ks.itemCount()):
+		if block_index in optimal_subset:
+			r.throwBrick(trash=False)
+		else:
+			r.throwBrick(trash=True)
 
-	#r.waitForBrick()
-
+	#r.say("The optimal subset has total value {}".format(max_val))
 
 if __name__ == "__main__":
 	main()
