@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-
 import time
 import sys
 import ev3dev.ev3 as ev3
@@ -18,6 +17,10 @@ class DeviceNotFoundException(Exception):
 	
 
 class Robot:
+	"""
+    This is the unified abstraction for all mechanical components
+    of the EV3 robot.
+    """
 
 	# printing informations for debugging
 	debug = True
@@ -41,6 +44,10 @@ class Robot:
 	TOUCH_SENSOR_HERTZ = 5
 
 	def __init__(self, debug=True):
+		"""
+        Upon initialization, the robot will check if every necessary mechanical
+        device is present, center the bottom slate and optionally set itself in debug mode.
+        """
 		self.debug = debug
 		
 		try:
@@ -57,15 +64,26 @@ class Robot:
 		self.dprint("Robot ready.")
 
 	def checkDevice(self, device, title):
+		"""
+        Check if a given device is physically connected to the EV3 and responds in
+        the expected way. Throws a `DeviceNotFoundException` if any test fails.
+        """
 		try:
 			self.dprint("Found device '", title, "': ", device.address)
 		except Exception as e:
 			raise DeviceNotFoundException("Device '{}' not found., ".format(title))
 
 	def say(self, string):
+		"""
+        Output the handed string via text-to-speech from the EV3.
+        """
 		ev3.Sound.speak(string)
 
 	def initBottomMotor(self):
+		"""
+        Center the bottom slate of the robot. This is necessary for correct operation and will
+        automatically be called upon initialization.
+        """
 		i = 0
 
 		while self.bottomSensor.color() != COLOR_RED:
@@ -75,8 +93,10 @@ class Robot:
 		if i != 0: # 
 			self.runMotor(self.bottomMotor, 50, inversed=(i < 5), power=self.BOT_MOTOR_POWER)		
 
-	# prints str on the console if debug mode is enabled
 	def dprint(self, str, var="", var2="", var3="", var4=""):
+		"""
+        Prints str on the console if debug mode is enabled
+        """
 		if self.debug == True:
 			print(str, var, var2, var3, var4)
 
@@ -84,8 +104,10 @@ class Robot:
 	def sleep(self, milliseconds):
 		time.sleep(milliseconds / 1000)
 
-	# wait for a brick (up to BRICK_WAIT_LIMIT)
 	def waitForBrick(self):
+		"""
+        Wait for a brick (up to BRICK_WAIT_LIMIT milliseconds)
+        """
 		self.dprint("Robot waiting for brick")
 		elapsed = 0
 		while(self.colorSensor.color() == COLOR_NONE or self.colorSensor.color() == COLOR_BLACK):
@@ -96,24 +118,44 @@ class Robot:
 				return False
 		return True
 
-	# scan brick at top sensor
 	def getBrickColor(self):
+		"""
+        Scan brick at top sensor and return color code (integer).
+        0: none
+        1: black
+        2: blue
+        3: green
+        4: yellow
+        5: red
+        6: white
+        7: brown
+        """
 		return self.colorSensor.color()
 		
-
-	# 750 milliseconds at 200 sp
 	def dropBrick(self):
+		"""
+		Drops one brick into the tower by running the top motor for
+		TOP_MOTOR_TIME at speed TOP_MOTOR_SPEED and resetting the motor 
+		to its previous position.
+		"""
 		self.dprint("dropping brick")
 		self.runMotor(self.topMotor, self.TOP_MOTOR_TIME)
 		self.runMotor(self.topMotor, self.TOP_MOTOR_TIME, True)
 		self.sleep(self.DROP_DELAY)
 
-	# 
 	def throwBrick(self, trash=False):
+		"""
+		Throws one brick out the bottom of the robot. Bricks may be thrown into the knapsack (`trash=False`)
+		or into the trash (`trash=True`)
+		"""
 		self.runMotorTillColor(self.bottomMotor, self.bottomSensor, (COLOR_GREEN if trash else COLOR_YELLOW), not trash, self.BOT_MOTOR_POWER)
 		self.runMotorTillColor(self.bottomMotor, self.bottomSensor, COLOR_RED, trash, self.BOT_MOTOR_POWER)
 
 	def runMotor(self, motor, t, inversed=False, power=200):
+		"""
+		Run given motor clockwise for given time. The power may be specified but is expected to
+		be positive. Pass `inversed=True` to move counter-clockwise.
+		"""
 		motor.reset()
 		motor.run_timed(time_sp=t, speed_sp=power * (-1 if inversed else 1))
 		while True:
@@ -122,6 +164,10 @@ class Robot:
 				return
 
 	def runMotorTillColor(self, motor, sensor, color, inversed=False, power=200):
+		"""
+		Runs given motor clockwise until given sensor detects specified color or a timeout is triggered. Power may be 
+		specified and is expected to be positive. Pass `inversed=True` to move counter-clockwise.
+		"""
 		motor.reset()
 		motor.run_forever(speed_sp=power * (-1 if inversed else 1))
 		end = 0
@@ -130,8 +176,10 @@ class Robot:
 			end = end + 1
 		motor.stop()
 
-	#
 	def waitForTouch(self):
+		"""
+		Blocks the current thread until touch sensor is pressed.
+		"""
 		while(self.touchSensor.value() != 1):
 			self.dprint("Waiting for button press... Status: Not Pressed")
 			self.sleep(1000 / self.TOUCH_SENSOR_HERTZ) # let the robot relax

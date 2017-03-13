@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 class Knapsack:
     """
     Knapsack objects provide an intuitive means of binding
