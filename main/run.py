@@ -19,7 +19,7 @@ def main():
 	# solve knapsack problem
 	max_val, optimal_subset = ks.solve()
 
-	for block_index in range(ks.itemCount()):
+	for block_index in range(ks.getItemCount()):
 		if block_index in optimal_subset:
 			r.throwBrick(trash=False)
 		else:

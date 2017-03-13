@@ -11,15 +11,20 @@ class Knapsack:
         """
         self.capacity = cap
         self.items = []
-
-    def setCapacity(self, cap):
-        self.capacity = cap
     
     def addItem(self, weight, value):
         """
-        add an item to this knapsack list of items
+        Add an item to this knapsack list of items
         """
         self.items.append([weight, value])
+
+    def reset(self):
+        """
+        Revert this object back into a default state. This persists the capacity with 
+        which the knapsack was initiallized.
+        """
+        self.items = []
+        self.cache = []
 
     
     def findBest(self, i, j):
@@ -56,8 +61,19 @@ class Knapsack:
             self.cache[i][j] = new
             return new
 
-    def itemCount(self):
+    def getItemCount(self):
+        """
+        Report how many items are currently being considered for
+        placement in the knapsack. This is the total number, not the
+        cardinality of an optimized subset.
+        """
         return len(self.items)
+
+    def getCapacity(self):
+        """
+        Report the capacity this knapsack was initiallized with
+        """
+        return self.capacity
     
     def solve(self):
         """
