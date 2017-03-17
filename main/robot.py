@@ -3,14 +3,14 @@ import time
 import sys
 import ev3dev.ev3 as ev3
 
-COLOR_NONE 	= 0
-COLOR_BLACK	= 1
-COLOR_BLUE 	= 2
+COLOR_NONE 		= 0
+COLOR_BLACK		= 1
+COLOR_BLUE 		= 2
 COLOR_GREEN 	= 3
 COLOR_YELLOW 	= 4
-COLOR_RED 	= 5
-COLOR_WHITE	= 6
-COLOR_BROWN	= 7
+COLOR_RED 		= 5
+COLOR_WHITE		= 6
+COLOR_BROWN		= 7
 
 class DeviceNotFoundException(Exception):
 	pass
@@ -26,22 +26,26 @@ class Robot:
 	debug = True
 
 	# motors	
-	topMotor	= ev3.MediumMotor("outA")
+	loadMotor		= ev3.LargeMotor("outC")
+	topMotor		= ev3.MediumMotor("outA")
 	bottomMotor 	= ev3.LargeMotor("outB")
 
 	# input sensors
-	colorSensor	= ev3.ColorSensor("in1")
+	colorSensor		= ev3.ColorSensor("in1")
 	bottomSensor 	= ev3.ColorSensor("in2")
 	touchSensor 	= ev3.TouchSensor("in3")	
 
 	# parameters
-	DROP_DELAY = 1500
-	BRICK_WAIT_LIMIT = 3000
-	TOP_MOTOR_TIME = 750
-	BOT_MOTOR_TIME = 400
-	BOT_MOTOR_POWER = 300
-	COLOR_SENSOR_HERTZ = 20
-	TOUCH_SENSOR_HERTZ = 5
+	DROP_DELAY 			= 1500
+	BRICK_WAIT_LIMIT 	= 3000
+	LOAD_DELAY			= 500
+	LOAD_MOTOR_TIME 	= 750
+	LOAD_MOTOR_POWER 	= 300
+	TOP_MOTOR_TIME 		= 750
+	BOT_MOTOR_TIME 		= 400
+	BOT_MOTOR_POWER 	= 300
+	COLOR_SENSOR_HERTZ 	= 20
+	TOUCH_SENSOR_HERTZ 	= 5
 
 	def __init__(self, debug=True):
 		"""
@@ -51,6 +55,7 @@ class Robot:
 		self.debug = debug
 		
 		try:
+			self.checkDevice(self.loadMotor, "ĺoad motor")
 			self.checkDevice(self.topMotor, "top motor")
 			self.checkDevice(self.bottomMotor, "bottom motor")
 			self.checkDevice(self.colorSensor, "top color sensor")
@@ -131,7 +136,16 @@ class Robot:
         7: brown
         """
 		return self.colorSensor.color()
-		
+
+	def loadBrick(self):
+		"""
+		Loads one brick from the 'magazine' into the main well.
+		"""
+		self.dprint("loading brick")
+		self.runMotor(self.loadMotor, self.LOAD_MOTOR_TIME, power=self.LOAD_MOTOR_POWER)		
+		self.runMotor(self.loadMotor, self.LOAD_MOTOR_TIME, power=self.LOAD_MOTOR_POWER, inversed=False)
+		self.sleep(self.LOAD_DELAY)		
+
 	def dropBrick(self):
 		"""
 		Drops one brick into the tower by running the top motor for
