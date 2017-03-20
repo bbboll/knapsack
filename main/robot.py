@@ -14,7 +14,6 @@ COLOR_BROWN		= 7
 
 class DeviceNotFoundException(Exception):
 	pass
-	
 
 class Robot:
 	"""
@@ -55,7 +54,7 @@ class Robot:
 		self.debug = debug
 		
 		try:
-			self.checkDevice(self.loadMotor, "ĺoad motor")
+			self.checkDevice(self.loadMotor, "load motor")
 			self.checkDevice(self.topMotor, "top motor")
 			self.checkDevice(self.bottomMotor, "bottom motor")
 			self.checkDevice(self.colorSensor, "top color sensor")
@@ -109,20 +108,6 @@ class Robot:
 	def sleep(self, milliseconds):
 		time.sleep(milliseconds / 1000)
 
-	def waitForBrick(self):
-		"""
-        Wait for a brick (up to BRICK_WAIT_LIMIT milliseconds)
-        """
-		self.dprint("Robot waiting for brick")
-		elapsed = 0
-		while(self.colorSensor.color() == COLOR_NONE or self.colorSensor.color() == COLOR_BLACK):
-			interval = 1000 / self.COLOR_SENSOR_HERTZ
-			self.sleep(interval)
-			elapsed += interval
-			if elapsed > self.BRICK_WAIT_LIMIT:
-				return False
-		return True
-
 	def getBrickColor(self):
 		"""
         Scan brick at top sensor and return color code (integer).
@@ -144,7 +129,24 @@ class Robot:
 		self.dprint("loading brick")
 		self.runMotor(self.loadMotor, self.LOAD_MOTOR_TIME, power=self.LOAD_MOTOR_POWER)		
 		self.runMotor(self.loadMotor, self.LOAD_MOTOR_TIME, power=self.LOAD_MOTOR_POWER, inversed=False)
-		self.sleep(self.LOAD_DELAY)		
+		self.sleep(self.LOAD_DELAY)
+
+	def checkBrickLoaded(self):
+		"""
+        Wait for a loaded brick (up to BRICK_WAIT_LIMIT milliseconds). If none is present or the color cannot be detected,
+        raise a `BrickNotDetectedException`
+        """
+		self.dprint("checking if brick was loaded")
+		elapsed = 0
+		while(self.colorSensor.color() == COLOR_NONE or self.colorSensor.color() == COLOR_BLACK):
+			interval = 1000 / self.COLOR_SENSOR_HERTZ
+			self.sleep(interval)
+			elapsed += interval
+			if elapsed > self.BRICK_WAIT_LIMIT:
+				errstr = "Expected brick from magazine but got color: {}".format("black" if self.colorSensor.color() == COLOR_BLACK else "none")
+				self.dprint(errstr)
+				return False
+		return True	
 
 	def dropBrick(self):
 		"""
