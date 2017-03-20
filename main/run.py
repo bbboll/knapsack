@@ -5,6 +5,11 @@ import time
 import settings
 
 def main():
+	"""
+	This is the entry point to the program. Abstractions for the Robot,
+	Configuration and Knapsack will be instantiated and the main program
+	progresses.
+	"""
 	config = settings.Settings()
 	r = robot.Robot(debug=config.debug())
 	ks = knapsack.Knapsack(cap=config.knapsack_cap)

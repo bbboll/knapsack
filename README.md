@@ -18,3 +18,4 @@ $ cd main/
 $ make html
 $ make latex
 ```
+To obtain the full documentation, this needs to be run on a system on which the ev3dev python module is installed. Otherwise, the tool fails to import this module and skips the documentation for `robot.py` and `run.py`
