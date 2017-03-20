@@ -2,6 +2,9 @@
 *.py~
 __pycache__
 
+# generated documentation
+build
+
 # Compiled Object files
 *.slo
 *.lo
