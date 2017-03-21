@@ -40,10 +40,12 @@ class Robot:
 	LOAD_DELAY			= 500
 	LOAD_MOTOR_TIME 	= 750
 	LOAD_MOTOR_POWER 	= 300
-	TOP_MOTOR_TIME 		= 750
+	TOP_MOTOR_TIME 		= 1000
 	BOT_MOTOR_TIME 		= 400
-	BOT_MOTOR_POWER 	= 300
+	BOT_MOTOR_POWER 	= 200
+	THROW_DELAY		= 500
 	COLOR_SENSOR_HERTZ 	= 20
+	COLOR_SENSOR_OVERSHOOT  = 50
 	TOUCH_SENSOR_HERTZ 	= 5
 
 	def __init__(self, debug=True):
@@ -128,7 +130,7 @@ class Robot:
 		"""
 		self.dprint("loading brick")
 		self.runMotor(self.loadMotor, self.LOAD_MOTOR_TIME, power=self.LOAD_MOTOR_POWER)		
-		self.runMotor(self.loadMotor, self.LOAD_MOTOR_TIME, power=self.LOAD_MOTOR_POWER, inversed=False)
+		self.runMotor(self.loadMotor, self.LOAD_MOTOR_TIME, power=self.LOAD_MOTOR_POWER, inversed=True)
 		self.sleep(self.LOAD_DELAY)
 
 	def checkBrickLoaded(self):
@@ -166,6 +168,7 @@ class Robot:
 		"""
 		self.runMotorTillColor(self.bottomMotor, self.bottomSensor, (COLOR_GREEN if trash else COLOR_YELLOW), not trash, self.BOT_MOTOR_POWER)
 		self.runMotorTillColor(self.bottomMotor, self.bottomSensor, COLOR_RED, trash, self.BOT_MOTOR_POWER)
+		self.sleep(self.THROW_DELAY)
 
 	def runMotor(self, motor, t, inversed=False, power=200):
 		"""
@@ -190,6 +193,7 @@ class Robot:
 		while sensor.color() != color and end < 20:
 			self.sleep(20)
 			end = end + 1
+		self.sleep(self.COLOR_SENSOR_OVERSHOOT)
 		motor.stop()
 
 	def waitForTouch(self):

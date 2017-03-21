@@ -4,7 +4,7 @@ import knapsack
 import time
 import settings
 
-MAGAZINE_BRICK_LIMIT = 6
+MAGAZINE_BRICK_LIMIT = 5
 
 def singlePhaseDemonstration(r, ks, config):
 	"""
@@ -52,5 +52,7 @@ if __name__ == "__main__":
 	config = settings.Settings()
 	r = robot.Robot(debug=config.debug())
 	ks = knapsack.Knapsack(cap=config.knapsack_cap)
+	
+	singlePhaseDemonstration(r, ks, config)
 
 	#r.say("The optimal subset has total value {}".format(max_val))

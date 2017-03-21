@@ -1,0 +1,36 @@
+{
+	"debug": true,
+	"capacity": 10,
+	"bricks": [
+		{
+			"color": "blue",
+			"weight": 4,
+			"value": 15
+		},
+		{
+			"color": "green",
+			"weight": 4,
+			"value": 25
+		},
+		{
+			"color": "yellow",
+			"weight": 6,
+			"value": 35
+		},
+		{
+			"color": "red",
+			"weight": 2,
+			"value": 15
+		},
+		{
+			"color": "white",
+			"weight": 6,
+			"value": 15
+		},
+		{
+			"color": "brown",
+			"weight": 4,
+			"value": 55
+		}
+	]
+}
