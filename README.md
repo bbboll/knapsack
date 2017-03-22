@@ -10,3 +10,12 @@ $ python3 -m unittest -v knapsack_test knapsack
 ```
 
 Note that the `tests/` directory contains sensor tests we ran on the robot, not unittests.
+
+# Documentation
+The `doc/` directory contains a `Makefile` for automatic generation of documentation from docstrings and `.rst` files contained in `doc/source`. Output formats for this documentation may be specified:
+```{r, engine='bash', doc_make}
+$ cd main/
+$ make html
+$ make latex
+```
+To obtain the full documentation, this needs to be run on a system on which the ev3dev python module is installed. Otherwise, the tool fails to import this module and skips the documentation for `robot.py` and `run.py`

@@ -3,18 +3,17 @@ import time
 import sys
 import ev3dev.ev3 as ev3
 
-COLOR_NONE 	= 0
-COLOR_BLACK	= 1
-COLOR_BLUE 	= 2
+COLOR_NONE 		= 0
+COLOR_BLACK		= 1
+COLOR_BLUE 		= 2
 COLOR_GREEN 	= 3
 COLOR_YELLOW 	= 4
-COLOR_RED 	= 5
-COLOR_WHITE	= 6
-COLOR_BROWN	= 7
+COLOR_RED 		= 5
+COLOR_WHITE		= 6
+COLOR_BROWN		= 7
 
 class DeviceNotFoundException(Exception):
 	pass
-	
 
 class Robot:
 	"""
@@ -26,22 +25,28 @@ class Robot:
 	debug = True
 
 	# motors	
-	topMotor	= ev3.MediumMotor("outA")
+	loadMotor		= ev3.LargeMotor("outC")
+	topMotor		= ev3.MediumMotor("outA")
 	bottomMotor 	= ev3.LargeMotor("outB")
 
 	# input sensors
-	colorSensor	= ev3.ColorSensor("in1")
+	colorSensor		= ev3.ColorSensor("in1")
 	bottomSensor 	= ev3.ColorSensor("in2")
 	touchSensor 	= ev3.TouchSensor("in3")	
 
 	# parameters
-	DROP_DELAY = 1500
-	BRICK_WAIT_LIMIT = 3000
-	TOP_MOTOR_TIME = 750
-	BOT_MOTOR_TIME = 400
-	BOT_MOTOR_POWER = 300
-	COLOR_SENSOR_HERTZ = 20
-	TOUCH_SENSOR_HERTZ = 5
+	DROP_DELAY 			= 1500
+	BRICK_WAIT_LIMIT 	= 3000
+	LOAD_DELAY			= 500
+	LOAD_MOTOR_TIME 	= 750
+	LOAD_MOTOR_POWER 	= 300
+	TOP_MOTOR_TIME 		= 1000
+	BOT_MOTOR_TIME 		= 400
+	BOT_MOTOR_POWER 	= 200
+	THROW_DELAY		= 500
+	COLOR_SENSOR_HERTZ 	= 20
+	COLOR_SENSOR_OVERSHOOT  = 50
+	TOUCH_SENSOR_HERTZ 	= 5
 
 	def __init__(self, debug=True):
 		"""
@@ -51,6 +56,7 @@ class Robot:
 		self.debug = debug
 		
 		try:
+			self.checkDevice(self.loadMotor, "load motor")
 			self.checkDevice(self.topMotor, "top motor")
 			self.checkDevice(self.bottomMotor, "bottom motor")
 			self.checkDevice(self.colorSensor, "top color sensor")
@@ -104,20 +110,6 @@ class Robot:
 	def sleep(self, milliseconds):
 		time.sleep(milliseconds / 1000)
 
-	def waitForBrick(self):
-		"""
-        Wait for a brick (up to BRICK_WAIT_LIMIT milliseconds)
-        """
-		self.dprint("Robot waiting for brick")
-		elapsed = 0
-		while(self.colorSensor.color() == COLOR_NONE or self.colorSensor.color() == COLOR_BLACK):
-			interval = 1000 / self.COLOR_SENSOR_HERTZ
-			self.sleep(interval)
-			elapsed += interval
-			if elapsed > self.BRICK_WAIT_LIMIT:
-				return False
-		return True
-
 	def getBrickColor(self):
 		"""
         Scan brick at top sensor and return color code (integer).
@@ -131,7 +123,33 @@ class Robot:
         7: brown
         """
 		return self.colorSensor.color()
-		
+
+	def loadBrick(self):
+		"""
+		Loads one brick from the 'magazine' into the main well.
+		"""
+		self.dprint("loading brick")
+		self.runMotor(self.loadMotor, self.LOAD_MOTOR_TIME, power=self.LOAD_MOTOR_POWER)		
+		self.runMotor(self.loadMotor, self.LOAD_MOTOR_TIME, power=self.LOAD_MOTOR_POWER, inversed=True)
+		self.sleep(self.LOAD_DELAY)
+
+	def checkBrickLoaded(self):
+		"""
+        Wait for a loaded brick (up to BRICK_WAIT_LIMIT milliseconds). If none is present or the color cannot be detected,
+        raise a `BrickNotDetectedException`
+        """
+		self.dprint("checking if brick was loaded")
+		elapsed = 0
+		while(self.colorSensor.color() == COLOR_NONE or self.colorSensor.color() == COLOR_BLACK):
+			interval = 1000 / self.COLOR_SENSOR_HERTZ
+			self.sleep(interval)
+			elapsed += interval
+			if elapsed > self.BRICK_WAIT_LIMIT:
+				errstr = "Expected brick from magazine but got color: {}".format("black" if self.colorSensor.color() == COLOR_BLACK else "none")
+				self.dprint(errstr)
+				return False
+		return True	
+
 	def dropBrick(self):
 		"""
 		Drops one brick into the tower by running the top motor for
@@ -150,6 +168,7 @@ class Robot:
 		"""
 		self.runMotorTillColor(self.bottomMotor, self.bottomSensor, (COLOR_GREEN if trash else COLOR_YELLOW), not trash, self.BOT_MOTOR_POWER)
 		self.runMotorTillColor(self.bottomMotor, self.bottomSensor, COLOR_RED, trash, self.BOT_MOTOR_POWER)
+		self.sleep(self.THROW_DELAY)
 
 	def runMotor(self, motor, t, inversed=False, power=200):
 		"""
@@ -174,6 +193,7 @@ class Robot:
 		while sensor.color() != color and end < 20:
 			self.sleep(20)
 			end = end + 1
+		self.sleep(self.COLOR_SENSOR_OVERSHOOT)
 		motor.stop()
 
 	def waitForTouch(self):
