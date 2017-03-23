@@ -49,7 +49,45 @@ def twoPhaseDemonstration(r, ks, config):
 	to be loaded to the magazine again. It will in turn re-scan each brick and return the optimal
 	subset successively.
 	"""
-	# TODO
+
+def demonstration(r, ks, config):
+	"""
+	"""
+	for i in range(0, MAGAZINE_BRICK_LIMIT):
+		r.loadBrick()
+
+		if r.checkBrickLoaded() == True:
+			color = r.getBrickColor()
+			weight, value = config.itemDataForColor(color)
+			ks.addItem(weight, value)
+			print("adding ({},{})".format(weight, value))
+			r.dropBrick()
+		else:
+			r.loadBrick() # make sure...
+			i -= 1
+
+	# check if there are more bricks and we have to switch to expert mode
+	r.loadBrick()
+	r.loadBrick() # twice, cause sometings the bricks get stuck
+
+	# beginner mode
+	if r.checkBrickLoaded() == False: # beginner mode
+		max_val, optimal_subset = ks.solve()
+		print(optimal_subset)
+
+		# output solution of knapsack problem
+		output = []
+		for item in ks.items:
+			if optimal_subset.count(item) > output.count(item):
+				r.throwBrick(trash=False)
+				output.append(item)
+			else:
+				r.throwBrick(trash=True)
+
+	# expert mode
+	else:
+		r.say("expert mode...")
+
 
 if __name__ == "__main__":
 	# load config, init robot and knapsack
@@ -57,6 +95,6 @@ if __name__ == "__main__":
 	r = robot.Robot(debug=config.debug())
 	ks = knapsack.Knapsack(cap=config.knapsack_cap)
 	
-	singlePhaseDemonstration(r, ks, config)
+	demonstration(r, ks, config)
 
 	#r.say("The optimal subset has total value {}".format(max_val))
