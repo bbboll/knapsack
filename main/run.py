@@ -20,9 +20,10 @@ def singlePhaseDemonstration(r, ks, config):
 			color = r.getBrickColor()
 			weight, value = config.itemDataForColor(color)
 			ks.addItem(weight, value)
+			print("adding ({},{})".format(weight, value))
 			r.dropBrick()
 		else:
-			# in case a brick was loaded that could not be detected drop it 
+			# in case a brick was loaded that could not be detected, drop it 
 			# to prevent it from getting stuck in the robot
 			ks.addItem(0, 0)
 			r.dropBrick()
@@ -30,11 +31,14 @@ def singlePhaseDemonstration(r, ks, config):
 	
 	# solve knapsack problem
 	max_val, optimal_subset = ks.solve()
+	print(optimal_subset)
 
 	# output solution of knapsack problem
-	for block_index in range(ks.getItemCount()):
-		if block_index in optimal_subset:
+	output = []
+	for item in ks.items:
+		if optimal_subset.count(item) > output.count(item):
 			r.throwBrick(trash=False)
+			output.append(item)
 		else:
 			r.throwBrick(trash=True)
 	
