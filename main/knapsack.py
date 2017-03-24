@@ -90,7 +90,7 @@ class Knapsack:
 
         # fill cache in a non-recursive way
         for i in range(len(self.items)+1):
-            self.findBest(len(self.items), self.capacity)
+            self.findBest(i , self.capacity)
 
         # find optimal subset from cached subproblem solutions
         optimalSubset = []
