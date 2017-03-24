@@ -134,7 +134,11 @@ class Robot:
 		Loads one brick from the 'magazine' into the main well.
 		"""
 		self.dprint("loading brick")
-		self.runMotor(self.loadMotor, self.LOAD_MOTOR_TIME, power=self.LOAD_MOTOR_POWER)		
+		self.runMotor(self.loadMotor, self.LOAD_MOTOR_TIME, power=self.LOAD_MOTOR_POWER)
+		self.runMotor(self.loadMotor, 100, power=self.LOAD_MOTOR_POWER, inversed=True)
+		self.runMotor(self.loadMotor, 100, power=self.LOAD_MOTOR_POWER)	
+		self.runMotor(self.loadMotor, 100, power=self.LOAD_MOTOR_POWER, inversed=True)
+		self.runMotor(self.loadMotor, 100, power=self.LOAD_MOTOR_POWER)	
 		self.runMotor(self.loadMotor, self.LOAD_MOTOR_TIME+500, power=self.LOAD_MOTOR_POWER, inversed=True)
 		self.sleep(self.LOAD_DELAY)
 
@@ -180,6 +184,7 @@ class Robot:
 		"""
 		Throw given count of bricks into trash.
 		"""
+		self.enclosed_brick_count -= count
 		for _ in range(count):
 			self.throwBrick(trash=True)
 

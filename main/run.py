@@ -5,7 +5,7 @@ import time
 import settings
 
 # number of bricks that physically fit for a single phase demonstration
-MAGAZINE_BRICK_LIMIT = 8
+MAGAZINE_BRICK_LIMIT = 7
 
 def process_block(r, ks):
 	color = r.getBrickColor()
@@ -69,20 +69,22 @@ def demonstration(r, ks, config):
 	# expert mode
 	else:
 		r.say("Expert mode. Hold button to stop loading bricks.")
-
+		process_block(r, ks)
 		r.outputBricks(r.enclosed_brick_count)
 		while not r.buttonIsPressed():
 			r.loadBrick()
 
 			if r.checkBrickLoaded():
 				process_block(r, ks)
+				r.throwBrick(trash=True)
 
 		r.say("Good. Solving knapsack problem.")
 
 		# make sure no blocks are left
-		for i in range(2):
-			if r.checkBrickLoaded():
-				process_block(r, ks)
+		#for i in range(2):
+	#		if r.checkBrickLoaded():
+#				process_block(r, ks)
+		r.outputBricks(r.enclosed_brick_count)
 
 		max_val, optimal_subset = ks.solve()
 		print(optimal_subset)
@@ -101,6 +103,7 @@ def demonstration(r, ks, config):
 				weight, value = config.itemDataForColor(color)
 				item = [weight, value]
 				r.dropBrick()
+				r.enclosed_brick_count += 1
 
 				# output solution of knapsack problem
 				if optimal_subset.count(item) > output.count(item):
@@ -125,3 +128,4 @@ if __name__ == "__main__":
 	
 	# start demonstration if initialization of objects succeeded
 	demonstration(r, ks, config)
+	r.say("Success!")
