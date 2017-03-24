@@ -24,6 +24,9 @@ class Robot:
 	# printing informations for debugging
 	debug = True
 
+	# number of bricks that are currently enclosed in the robot
+	enclosed_brick_count = 0
+
 	# motors	
 	loadMotor		= ev3.LargeMotor("outC")
 	topMotor		= ev3.MediumMotor("outA")
@@ -40,7 +43,7 @@ class Robot:
 	LOAD_DELAY			= 500
 	LOAD_MOTOR_TIME 	= 750
 	LOAD_MOTOR_POWER 	= 300
-	TOP_MOTOR_TIME 		= 1000
+	TOP_MOTOR_TIME 		= 1100
 	BOT_MOTOR_TIME 		= 400
 	BOT_MOTOR_POWER 	= 200
 	THROW_DELAY		= 500
@@ -132,7 +135,7 @@ class Robot:
 		"""
 		self.dprint("loading brick")
 		self.runMotor(self.loadMotor, self.LOAD_MOTOR_TIME, power=self.LOAD_MOTOR_POWER)		
-		self.runMotor(self.loadMotor, self.LOAD_MOTOR_TIME, power=self.LOAD_MOTOR_POWER, inversed=True)
+		self.runMotor(self.loadMotor, self.LOAD_MOTOR_TIME+500, power=self.LOAD_MOTOR_POWER, inversed=True)
 		self.sleep(self.LOAD_DELAY)
 
 	def checkBrickLoaded(self):

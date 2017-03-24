@@ -7,16 +7,13 @@ import settings
 # number of bricks that physically fit for a single phase demonstration
 MAGAZINE_BRICK_LIMIT = 8
 
-# number of bricks that are currently enclosed in the robot
-enclosed_brick_count = 0
-
 def process_block(r, ks):
 	color = r.getBrickColor()
 	weight, value = config.itemDataForColor(color)
 	ks.addItem(weight, value)
 	r.dprint("adding ({},{})".format(weight, value))
 	r.dropBrick()
-	enclosed_brick_count += 1
+	r.enclosed_brick_count += 1
 
 def demonstration(r, ks, config):
 	"""
@@ -44,6 +41,8 @@ def demonstration(r, ks, config):
 
 		if r.checkBrickLoaded():
 			process_block(r, ks)
+		else:
+			break
 
 	# check if there are more bricks and we have to switch to expert mode
 	r.loadBrick()
@@ -65,13 +64,13 @@ def demonstration(r, ks, config):
 				output.append(item)
 			else:
 				r.throwBrick(trash=True)
-			enclosed_brick_count -= 1
+			r.enclosed_brick_count -= 1
 
 	# expert mode
 	else:
 		r.say("Expert mode. Hold button to stop loading bricks.")
 
-		r.outputBricks(enclosed_brick_count)
+		r.outputBricks(r.enclosed_brick_count)
 		while not r.buttonIsPressed():
 			r.loadBrick()
 
@@ -101,6 +100,7 @@ def demonstration(r, ks, config):
 				color = r.getBrickColor()
 				weight, value = config.itemDataForColor(color)
 				item = [weight, value]
+				r.dropBrick()
 
 				# output solution of knapsack problem
 				if optimal_subset.count(item) > output.count(item):
@@ -110,11 +110,11 @@ def demonstration(r, ks, config):
 					r.throwBrick(trash=True)
 					
 
-				enclosed_brick_count -= 1
+				r.enclosed_brick_count -= 1
 				leftBlockCount -= 1
 
 		# output possibly enclosed bricks
-		r.outputBricks(enclosed_brick_count)
+		r.outputBricks(r.enclosed_brick_count)
 
 
 if __name__ == "__main__":
