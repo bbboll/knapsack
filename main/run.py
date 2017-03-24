@@ -70,7 +70,7 @@ def demonstration(r, ks, config):
 	r.loadBrick()
 	r.loadBrick() # twice, cause sometings the bricks get stuck
 
-	# beginner mode
+	# beginner mode if there are MAGAZINE_BRICK_LIMIT or less blocks
 	if r.checkBrickLoaded() == False: # beginner mode
 		max_val, optimal_subset = ks.solve()
 		print(optimal_subset)
@@ -86,7 +86,56 @@ def demonstration(r, ks, config):
 
 	# expert mode
 	else:
-		r.say("expert mode...")
+		r.say("Expert mode. Hold button to stop loading bricks.")
+
+		while r.buttonIsPressed() == False:
+			r.loadBrick()
+
+			if r.checkBrickLoaded() == True:
+				color = r.getBrickColor()
+				weight, value = config.itemDataForColor(color)
+				ks.addItem(weight, value)
+				print("adding ({},{})".format(weight, value))
+				r.dropBrick()
+
+		r.say("Stoped.")
+
+		# make sure no blocks are left
+		for i in range(0, 2):
+			if r.checkBrickLoaded() == True:
+				color = r.getBrickColor()
+				weight, value = config.itemDataForColor(color)
+				ks.addItem(weight, value)
+				print("adding ({},{})".format(weight, value))
+				r.dropBrick()
+
+		max_val, optimal_subset = ks.solve()
+		print(optimal_subset)
+
+		r.say("Feed me.")
+
+		leftBlockCount = len(ks.items)
+		leftsBlocks = optimal_subset
+
+		output = []
+
+		while leftBlockCount != 0:
+			r.loadBrick()
+
+			if r.checkBrickLoaded() == True:
+
+				color = r.getBrickColor()
+				weight, value = config.itemDataForColor(color)
+
+				# output solution of knapsack problem
+				for item in ks.items:
+					if optimal_subset.count(item) > output.count(item):
+						r.throwBrick(trash=False)
+						output.append(item)
+					else:
+						r.throwBrick(trash=True)
+
+				leftBlockCount -= 1
 
 
 if __name__ == "__main__":

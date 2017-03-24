@@ -208,3 +208,6 @@ class Robot:
 			self.sleep(1000 / self.TOUCH_SENSOR_HERTZ) # let the robot relax
 		self.dprint("Waiting for button press... Status: Pressed")
 
+	def buttonIsPressed(self):
+		return self.touchSensor.value() == 1
+
