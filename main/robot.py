@@ -173,6 +173,13 @@ class Robot:
 		self.runMotorTillColor(self.bottomMotor, self.bottomSensor, COLOR_RED, trash, self.BOT_MOTOR_POWER)
 		self.sleep(self.THROW_DELAY)
 
+	def outputBricks(self, count):
+		"""
+		Throw given count of bricks into trash.
+		"""
+		for _ in range(count):
+			self.throwBrick(trash=True)
+
 	def runMotor(self, motor, t, inversed=False, power=200):
 		"""
 		Run given motor clockwise for given time. The power may be specified but is expected to
