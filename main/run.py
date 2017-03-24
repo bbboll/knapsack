@@ -4,48 +4,118 @@ import knapsack
 import time
 import settings
 
-MAGAZINE_BRICK_LIMIT = 5
+# number of bricks that physically fit for a single phase demonstration
+MAGAZINE_BRICK_LIMIT = 8
 
-def singlePhaseDemonstration(r, ks, config):
-	"""
-	Single phase demonstrations perform scanning of bricks, solving the knapsack problem
-	and returning the optimal subset without user intervention. The magazine is expected
-	to be loaded.
-	"""
+# number of bricks that are currently enclosed in the robot
+enclosed_brick_count = 0
 
-	# scan up to MAGAZINE_BRICK_LIMIT bricks
-	for _ in range(MAGAZINE_BRICK_LIMIT):
+def process_block(r, ks):
+	color = r.getBrickColor()
+	weight, value = config.itemDataForColor(color)
+	ks.addItem(weight, value)
+	r.dprint("adding ({},{})".format(weight, value))
+	r.dropBrick()
+	enclosed_brick_count += 1
+
+def demonstration(r, ks, config):
+	"""
+	Demonstrate the knapsack problem by loading bricks from the magazine, scanning 
+	and dropping them. If the user has loaded less than MAGAZINE_BRICK_LIMIT, the 
+	scanning process will finish with all bricks still enclosed in the robot.
+	It will proceed solving the knapsack problem encoded in the brick color and
+	physically output the optimal solution by throwing the bricks in the metaphorical
+	knapsack at the bottom of the robot (or the trash).
+
+	If the user has loaded more than MAGAZINE_BRICK_LIMIT, the robot will detect this
+	and automatically switch to 'expert mode'. The demonstration becomes two-phased.
+	The first phase is the scanning phase; all loaded bricks will instantly be thrown
+	out by the robot as soon as they have been scanned.
+	The second phase starts on explicit user command (touch sensor). The robot will now
+	solve the current knapsack problem while the user (re-)loads all bricks. Sequence of
+	(re-)loading is not relevant. The robot will now successively output the optimal solution.
+	"""
+	for i in range(MAGAZINE_BRICK_LIMIT):
 		r.loadBrick()
-		if r.checkBrickLoaded():
-			color = r.getBrickColor()
-			weight, value = config.itemDataForColor(color)
-			ks.addItem(weight, value)
-			r.dropBrick()
-		else:
-			# in case a brick was loaded that could not be detected drop it 
-			# to prevent it from getting stuck in the robot
-			ks.addItem(0, 0)
-			r.dropBrick()
-			break
-	
-	# solve knapsack problem
-	max_val, optimal_subset = ks.solve()
 
-	# output solution of knapsack problem
-	for block_index in range(ks.getItemCount()):
-		if block_index in optimal_subset:
-			r.throwBrick(trash=False)
-		else:
-			r.throwBrick(trash=True)
-	
-def twoPhaseDemonstration(r, ks, config):
-	"""
-	Two phase demonstrations perform scanning of bricks in the first phase, instantly returing
-	each brick to the user. On user command, phase starts. Now, the robot waits for each brick
-	to be loaded to the magazine again. It will in turn re-scan each brick and return the optimal
-	subset successively.
-	"""
-	# TODO
+		# second try for safety
+		if not r.checkBrickLoaded():
+			r.loadBrick()
+
+		if r.checkBrickLoaded():
+			process_block(r, ks)
+
+	# check if there are more bricks and we have to switch to expert mode
+	r.loadBrick()
+
+	# twice, in case a brick gets stuck
+	if not r.checkBrickLoaded():
+		r.loadBrick()	
+
+	# simple mode if there are MAGAZINE_BRICK_LIMIT or less blocks
+	if not r.checkBrickLoaded(): # simple mode
+		max_val, optimal_subset = ks.solve()
+		r.dprint(optimal_subset)
+
+		# output solution of knapsack problem
+		output = []
+		for item in ks.items:
+			if optimal_subset.count(item) > output.count(item):
+				r.throwBrick(trash=False)
+				output.append(item)
+			else:
+				r.throwBrick(trash=True)
+			enclosed_brick_count -= 1
+
+	# expert mode
+	else:
+		r.say("Expert mode. Hold button to stop loading bricks.")
+
+		r.outputBricks(enclosed_brick_count)
+		while not r.buttonIsPressed():
+			r.loadBrick()
+
+			if r.checkBrickLoaded():
+				process_block(r, ks)
+
+		r.say("Good. Solving knapsack problem.")
+
+		# make sure no blocks are left
+		for i in range(2):
+			if r.checkBrickLoaded():
+				process_block(r, ks)
+
+		max_val, optimal_subset = ks.solve()
+		print(optimal_subset)
+
+		r.say("Load all bricks again.")
+
+		leftBlockCount = len(ks.items)
+		output = []
+
+		while leftBlockCount != 0 and not r.buttonIsPressed():
+
+			r.loadBrick()
+			if r.checkBrickLoaded():
+
+				color = r.getBrickColor()
+				weight, value = config.itemDataForColor(color)
+				item = [weight, value]
+
+				# output solution of knapsack problem
+				if optimal_subset.count(item) > output.count(item):
+					r.throwBrick(trash=False)
+					output.append(item)
+				else:
+					r.throwBrick(trash=True)
+					
+
+				enclosed_brick_count -= 1
+				leftBlockCount -= 1
+
+		# output possibly enclosed bricks
+		r.outputBricks(enclosed_brick_count)
+
 
 if __name__ == "__main__":
 	# load config, init robot and knapsack
@@ -53,6 +123,5 @@ if __name__ == "__main__":
 	r = robot.Robot(debug=config.debug())
 	ks = knapsack.Knapsack(cap=config.knapsack_cap)
 	
-	singlePhaseDemonstration(r, ks, config)
-
-	#r.say("The optimal subset has total value {}".format(max_val))
+	# start demonstration if initialization of objects succeeded
+	demonstration(r, ks, config)

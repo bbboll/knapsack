@@ -6,8 +6,8 @@ import ev3dev.ev3 as ev3
 COLOR_NONE 		= 0
 COLOR_BLACK		= 1
 COLOR_BLUE 		= 2
-COLOR_GREEN 	= 3
-COLOR_YELLOW 	= 4
+COLOR_GREEN		= 3
+COLOR_YELLOW		= 4
 COLOR_RED 		= 5
 COLOR_WHITE		= 6
 COLOR_BROWN		= 7
@@ -50,9 +50,9 @@ class Robot:
 
 	def __init__(self, debug=True):
 		"""
-        Upon initialization, the robot will check if every necessary mechanical
-        device is present, center the bottom slate and optionally set itself in debug mode.
-        """
+		Upon initialization, the robot will check if every necessary mechanical
+		device is present, center the bottom slate and optionally set itself in debug mode.
+		"""
 		self.debug = debug
 		
 		try:
@@ -71,9 +71,9 @@ class Robot:
 
 	def checkDevice(self, device, title):
 		"""
-        Check if a given device is physically connected to the EV3 and responds in
-        the expected way. Throws a `DeviceNotFoundException` if any test fails.
-        """
+		Check if a given device is physically connected to the EV3 and responds in
+		the expected way. Throws a `DeviceNotFoundException` if any test fails.
+		"""
 		try:
 			self.dprint("Found device '", title, "': ", device.address)
 		except Exception as e:
@@ -81,15 +81,15 @@ class Robot:
 
 	def say(self, string):
 		"""
-        Output the handed string via text-to-speech from the EV3.
-        """
+		Output the handed string via text-to-speech from the EV3.
+		"""
 		ev3.Sound.speak(string)
 
 	def initBottomMotor(self):
 		"""
-        Center the bottom slate of the robot. This is necessary for correct operation and will
-        automatically be called upon initialization.
-        """
+		Center the bottom slate of the robot. This is necessary for correct operation and will
+		automatically be called upon initialization.
+		"""
 		i = 0
 
 		while self.bottomSensor.color() != COLOR_RED:
@@ -101,8 +101,8 @@ class Robot:
 
 	def dprint(self, str, var="", var2="", var3="", var4=""):
 		"""
-        Prints str on the console if debug mode is enabled
-        """
+		Prints str on the console if debug mode is enabled
+		"""
 		if self.debug == True:
 			print(str, var, var2, var3, var4)
 
@@ -112,17 +112,19 @@ class Robot:
 
 	def getBrickColor(self):
 		"""
-        Scan brick at top sensor and return color code (integer).
-        0: none
-        1: black
-        2: blue
-        3: green
-        4: yellow
-        5: red
-        6: white
-        7: brown
-        """
-		return self.colorSensor.color()
+		Scan brick at top sensor and return color code (integer).
+		0: none
+		1: black
+		2: blue
+		3: green
+		4: yellow
+		5: red
+		6: white
+		7: brown
+		"""
+		color = self.colorSensor.color()
+		self.dprint("found color: {}".format(color))
+		return color
 
 	def loadBrick(self):
 		"""
@@ -135,9 +137,9 @@ class Robot:
 
 	def checkBrickLoaded(self):
 		"""
-        Wait for a loaded brick (up to BRICK_WAIT_LIMIT milliseconds). If none is present or the color cannot be detected,
-        raise a `BrickNotDetectedException`
-        """
+		Wait for a loaded brick (up to BRICK_WAIT_LIMIT milliseconds). If none is present or the color cannot be detected,
+		raise a `BrickNotDetectedException`
+		"""
 		self.dprint("checking if brick was loaded")
 		elapsed = 0
 		while(self.colorSensor.color() == COLOR_NONE or self.colorSensor.color() == COLOR_BLACK):
@@ -166,9 +168,17 @@ class Robot:
 		Throws one brick out the bottom of the robot. Bricks may be thrown into the knapsack (`trash=False`)
 		or into the trash (`trash=True`)
 		"""
+		self.dprint("throwing into "+("trash" if trash else "knapsack"))
 		self.runMotorTillColor(self.bottomMotor, self.bottomSensor, (COLOR_GREEN if trash else COLOR_YELLOW), not trash, self.BOT_MOTOR_POWER)
 		self.runMotorTillColor(self.bottomMotor, self.bottomSensor, COLOR_RED, trash, self.BOT_MOTOR_POWER)
 		self.sleep(self.THROW_DELAY)
+
+	def outputBricks(self, count):
+		"""
+		Throw given count of bricks into trash.
+		"""
+		for _ in range(count):
+			self.throwBrick(trash=True)
 
 	def runMotor(self, motor, t, inversed=False, power=200):
 		"""
@@ -204,4 +214,7 @@ class Robot:
 			self.dprint("Waiting for button press... Status: Not Pressed")
 			self.sleep(1000 / self.TOUCH_SENSOR_HERTZ) # let the robot relax
 		self.dprint("Waiting for button press... Status: Pressed")
+
+	def buttonIsPressed(self):
+		return self.touchSensor.value() == 1
 
