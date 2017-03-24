@@ -45,7 +45,7 @@ class TestKnapsackSolver(unittest.TestCase):
 		self.knapsack.addItem(1, 4)
 		value, itemList = self.knapsack.solve()
 		self.assertEqual(value, 17)
-		self.assertListEqual([0,2,3,4], itemList)
+		self.assertListEqual([[1,4],[2,1],[4,5],[3,7]], itemList)
 		self.knapsack.reset()
 
 	def test_solve_two(self):
@@ -70,7 +70,7 @@ class TestKnapsackSolver(unittest.TestCase):
 		self.knapsack.addItem(0, 2)
 		value, itemList = self.knapsack.solve()
 		self.assertEqual(value, 18)
-		self.assertListEqual([0,1,2,3], itemList)
+		self.assertListEqual([[0,2],[0,7],[0,4],[0,5]], itemList)
 		self.knapsack.reset()
 
 	def test_solve_four(self):
@@ -83,5 +83,5 @@ class TestKnapsackSolver(unittest.TestCase):
 		self.knapsack.addItem(3, 0)
 		value, itemList = self.knapsack.solve()
 		self.assertEqual(value, 0)
-		self.assertListEqual([0,1], itemList)
+		self.assertListEqual([], itemList)
 		self.knapsack.reset()
